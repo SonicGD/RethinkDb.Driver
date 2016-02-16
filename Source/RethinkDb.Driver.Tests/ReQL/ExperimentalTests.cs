@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using FluentAssertions;
 using NUnit.Framework;
 using RethinkDb.Driver.Ast;
+using RethinkDb.Driver.Linq;
 using RethinkDb.Driver.Model;
 using RethinkDb.Driver.Tests.Utils;
 
@@ -45,6 +46,13 @@ namespace RethinkDb.Driver.Tests.ReQL
         {
             //var e = GetReqlExpr<Game>(g => g.points > 9 && g.points < 12);
             var e = GetReqlExpr<Game>(g => g.points > 9);
+        }
+
+        [Test]
+        public void linq()
+        {
+            var query = R.db("foo").Table<Foo>("foobar");
+            var result = query.Where(f => f.id == "jjj").ToList();
         }
 
         private Expression GetReqlExpr<T>(Expression<Func<T, object>> expr)

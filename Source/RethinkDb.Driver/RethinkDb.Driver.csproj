@@ -49,6 +49,9 @@
       <HintPath>..\packages\Common.Logging.Core.3.3.0\lib\net40\Common.Logging.Core.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Remotion.Linq">
+      <HintPath>..\packages\Remotion.Linq\lib\net45\Remotion.Linq.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
   </ItemGroup>
@@ -62,6 +65,7 @@
     <Compile Include="Ast\ReqlExpr.cs" />
     <Compile Include="Ast\Util.cs" />
     <Compile Include="ErrorBuilder.cs" />
+    <Compile Include="Linq\RethinkQueryable.cs" />
     <Compile Include="Generated\Ast\Fold.cs" />
     <Compile Include="Generated\Ast\Grant.cs" />
     <Compile Include="Generated\ReqlPermissionError.cs" />
@@ -344,6 +348,7 @@
   <ItemGroup>
     <Analyzer Include="..\packages\ConfigureAwaitChecker.Analyzer\analyzers\dotnet\cs\ConfigureAwaitChecker.dll" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

@@ -1,3 +1,4 @@
 source https://www.nuget.org/api/v2
 
 nuget ConfigureAwaitChecker.Analyzer == 1.0.0-beta4
+nuget Remotion.Linq == 2.0.2

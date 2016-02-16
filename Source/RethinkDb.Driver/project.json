@@ -25,8 +25,8 @@
     "frameworks": {
         "net45": {
             "dependencies": {
-                "Common.Logging": "3.3.0"
-            },
+                "Common.Logging": "3.3.0",
+                "Remotion.Linq": "2.0.2"
             "frameworkAssemblies": { }
         },
         "dnx451": {
