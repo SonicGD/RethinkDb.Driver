@@ -65,6 +65,8 @@
     <Compile Include="Ast\ReqlExpr.cs" />
     <Compile Include="Ast\Util.cs" />
     <Compile Include="ErrorBuilder.cs" />
+    <Compile Include="Linq\ExpressionVisitor.cs" />
+    <Compile Include="Linq\ModelVisitor.cs" />
     <Compile Include="Linq\RethinkQueryable.cs" />
     <Compile Include="Generated\Ast\Fold.cs" />
     <Compile Include="Generated\Ast\Grant.cs" />

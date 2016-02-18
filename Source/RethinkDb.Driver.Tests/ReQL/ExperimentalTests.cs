@@ -5,9 +5,9 @@ using System.Linq.Expressions;
 using FluentAssertions;
 using NUnit.Framework;
 using RethinkDb.Driver.Ast;
-using RethinkDb.Driver.Linq;
 using RethinkDb.Driver.Model;
 using RethinkDb.Driver.Tests.Utils;
+using ExpressionVisitor = System.Linq.Expressions.ExpressionVisitor;
 
 namespace RethinkDb.Driver.Tests.ReQL
 {
@@ -51,8 +51,7 @@ namespace RethinkDb.Driver.Tests.ReQL
         [Test]
         public void linq()
         {
-            var query = R.db("foo").Table<Foo>("foobar");
-            var result = query.Where(f => f.id == "jjj").ToList();
+
         }
 
         private Expression GetReqlExpr<T>(Expression<Func<T, object>> expr)
