@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Linq.Expressions;
 using Remotion.Linq;
 using Remotion.Linq.Clauses;
 using Remotion.Linq.Clauses.Expressions;
 using RethinkDb.Driver.Ast;
+using RethinkDb.Driver.Model;
 
 namespace RethinkDb.Driver.Linq
 {
@@ -30,11 +32,53 @@ If you don’t at least throw an exception for those constructs you simply
 cannot translate, you’ll get invalid query translations.
 */
 
+    public class ReqlTableAttribute : Attribute
+    {
+        public string Database { get; }
+        public string Table { get; }
+
+        public ReqlTableAttribute(string table) : this(table, null)
+        {
+        }
+
+        /// <param name="database">If null, uses conneciton's default database.</param>
+        public ReqlTableAttribute(string table, string database = null)
+        {
+            this.Database = database;
+            this.Table = table;
+        }
+    }
+    public class ReqlIndexAttribute : Attribute
+    {
+        public string IndexName { get; }
+
+        public ReqlIndexAttribute(string indexName)
+        {
+            this.IndexName = indexName;
+        }
+    }
+    public class ReqlPrimaryKey : Attribute
+    {
+        
+    }
+
+    public class Vars
+    {
+        public Dictionary<string, ReqlExpr> ByName = new Dictionary<string, ReqlExpr>();
+        public Dictionary<int, ReqlExpr> ById = new Dictionary<int, ReqlExpr>();
+
+        public void Add(string fromName, int varId, Var term)
+        {
+            this.ByName.Add(fromName, term);
+            this.ById.Add(varId, term);
+        }
+    }
     public class ModelVisitor : QueryModelVisitorBase
     {
         private readonly Table table;
+        private static RethinkDB R = RethinkDB.R;
 
-        public ReqlAst Query { get; set; }
+        public ReqlAst Query => stack.Peek();
 
         public Stack<ReqlExpr> stack = new Stack<ReqlExpr>();
 
@@ -43,7 +87,7 @@ cannot translate, you’ll get invalid query translations.
             this.table = table;
         }
 
-        public Dictionary<string, ReqlExpr> FromExprs = new Dictionary<string, ReqlExpr>();
+        public Vars fromVars = new Vars();
 
         public override void VisitQueryModel(QueryModel queryModel)
         {
@@ -55,8 +99,12 @@ cannot translate, you’ll get invalid query translations.
             if( fromClause.FromExpression is SubQueryExpression )
                 throw new NotSupportedException($"{nameof(MainFromClause)} cannot be a SubQueryExpression");
 
-            var var = fromClause.ItemName;
-            this.FromExprs.Add(var, new Var());
+            var linqName = fromClause.ItemName;
+            var varId = Func.NextVarId();
+            var var = new Var(varId);
+            
+
+            this.fromVars.Add(linqName, varId, var);
 
             base.VisitMainFromClause(fromClause, queryModel);
 
@@ -86,16 +134,18 @@ cannot translate, you’ll get invalid query translations.
         {
 
             //Is it a FILTER, GET or GETALL, OR BETWEEN?
+            var predicateExpr = GetReqlAst(whereClause.Predicate, queryModel, this.fromVars);
 
-            var expr = GetReqlAst(whereClause.Predicate, queryModel);
+            var varIds = this.fromVars.ById.Keys.ToList();
 
+            var func = Func.MakeFunc(varIds, predicateExpr);
 
-            this.stack.Push(expr);
+            this.stack.Push(func);
         }
 
-        private ReqlExpr GetReqlAst(Expression predicate, QueryModel queryModel)
+        private ReqlExpr GetReqlAst(Expression predicate, QueryModel queryModel, Vars vars)
         {
-            var visitor = new ExpressionVisitor(this, queryModel);
+            var visitor = new ExpressionVisitor(this, queryModel, vars);
             visitor.Visit(predicate);
             return visitor.Current;
         }
@@ -113,6 +163,10 @@ cannot translate, you’ll get invalid query translations.
 
         public override void VisitSelectClause(SelectClause selectClause, QueryModel queryModel)
         {
+            //var map = GetReqlAst(selectClause.Selector, queryModel, this.fromVars);
+            DefaultIfE
+
+
             base.VisitSelectClause(selectClause, queryModel);
         }
 

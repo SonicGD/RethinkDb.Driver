@@ -18,20 +18,18 @@
 
 @section Ctors{
     
-        protected Func(Arguments args) : base(TermType.FUNC, args, null)
+        internal Func(Arguments args) : base(TermType.FUNC, args, null)
         {
         }
 
 }
 
 @section MemberVars{
-        private static int VarId = 0;
+    // CHECK PARTIAL CLASS FOR MEMBERVARS
 }
 
 @section SpecialMethods{
-        private static int NextVarId(){
-            return Interlocked.Increment(ref VarId);
-        }
+    // CHECK PARTIAL CLASS FOR SPECIAL METHODS
 }
 
 @section StaticFactories{

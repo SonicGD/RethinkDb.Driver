@@ -34,7 +34,7 @@ namespace RethinkDb.Driver.Ast {
     public partial class Func : ReqlExpr {
 
     
-        private static int VarId = 0;
+    // CHECK PARTIAL CLASS FOR MEMBERVARS
 
     
     
@@ -181,9 +181,7 @@ namespace RethinkDb.Driver.Ast {
       
 
     
-        private static int NextVarId(){
-            return Interlocked.Increment(ref VarId);
-        }
+    // CHECK PARTIAL CLASS FOR SPECIAL METHODS
 
 
 

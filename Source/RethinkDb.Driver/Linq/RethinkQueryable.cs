@@ -147,18 +147,18 @@ QueryModel as a sub-query.
 
         public T ExecuteSingle<T>(QueryModel queryModel, bool returnDefaultWhenEmpty)
         {
-            var visitor = new ModelVisitor(table);
-
-            visitor.VisitQueryModel(queryModel);
-
-            var result = visitor.Query.RunResult<T>(conn);
-
-            return result;
+            throw new System.NotImplementedException();
         }
 
         public IEnumerable<T> ExecuteCollection<T>(QueryModel queryModel)
         {
-            return null;
+            var visitor = new ModelVisitor(table);
+
+            visitor.VisitQueryModel(queryModel);
+
+            var result = visitor.Query.RunCursor<T>(conn);
+
+            return result;
         }
     }
 

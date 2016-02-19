@@ -98,13 +98,15 @@ take the elements and integrate them into the current query part.
     {
         private readonly ModelVisitor modelVisitor;
         private readonly QueryModel queryModel;
+        private readonly Vars fromVars;
 
         private Stack<ReqlExpr> stack = new Stack<ReqlExpr>();
 
-        public ExpressionVisitor(ModelVisitor modelVisitor, QueryModel queryModel)
+        public ExpressionVisitor(ModelVisitor modelVisitor, QueryModel queryModel, Vars fromVars)
         {
             this.modelVisitor = modelVisitor;
             this.queryModel = queryModel;
+            this.fromVars = fromVars;
         }
 
         public ReqlExpr Current => this.stack.Peek();
@@ -134,7 +136,8 @@ take the elements and integrate them into the current query part.
             Visit(expression.Right);
             var right = stack.Pop();
 
-            stack.Push(ExprHelper.TranslateBinary(expression.NodeType, left, right));
+            var operation = ExprHelper.TranslateBinary(expression.NodeType, left, right);
+            stack.Push(operation);
 
             return expression;
         }
@@ -151,8 +154,9 @@ take the elements and integrate them into the current query part.
 
         protected override Expression VisitConstant(ConstantExpression expression)
         {
-            stack.Push(Util.ToReqlExpr(expression.Value));
-            return base.VisitConstant(expression);
+            var datum = Util.ToReqlExpr(expression.Value);
+            stack.Push(datum);
+            return expression;
         }
 
         protected override Expression VisitDebugInfo(DebugInfoExpression expression)
@@ -215,13 +219,12 @@ take the elements and integrate them into the current query part.
 
         protected override Expression VisitMember(MemberExpression expression)
         {
-            var propName = expression.Member.Name;
+            Visit(expression.Expression);
+            var var = this.stack.Pop();
+            var fieldName = expression.Member.Name;
 
-            
-
-
-
-            return base.VisitMember(expression);
+            this.stack.Push(var[fieldName]);
+            return expression;
         }
 
         protected override Expression VisitNewArray(NewArrayExpression expression)
@@ -241,7 +244,10 @@ take the elements and integrate them into the current query part.
 
         protected override Expression VisitQuerySourceReference(QuerySourceReferenceExpression expression)
         {
-            return base.VisitQuerySourceReference(expression);
+            var varName = expression.ReferencedQuerySource.ItemName;
+            var var = this.fromVars.ByName[varName];
+            this.stack.Push(var);
+            return expression;
         }
 
         protected override Expression VisitParameter(ParameterExpression expression)

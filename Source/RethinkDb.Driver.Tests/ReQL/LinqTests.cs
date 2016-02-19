@@ -1,48 +1,65 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using FluentAssertions;
 using NUnit.Framework;
 using RethinkDb.Driver.Linq;
+using RethinkDb.Driver.Model;
+using RethinkDb.Driver.Net;
 
 namespace RethinkDb.Driver.Tests.ReQL
 {
+    [ReqlTable("mydb", "mytable")]
+    public class Person
+    {
+        [ReqlPrimaryKey]
+        public Guid Id { get; set; }
+        
+        public string FirstName { get; set; }
+
+        [ReqlIndex("lastname_ix")]
+        public string LastName { get; set; }
+    }
+
+
     [TestFixture]
     [Explicit]
     public class LinqTests : QueryTestFixture
     {
-        [TestFixtureSetUp]
-        public void BeforeRunningTestSession()
-        {
-
-        }
-
-        [TestFixtureTearDown]
-        public void AfterRunningTestSession()
-        {
-
-        }
-
-
-        [SetUp]
-        public void BeforeEachTest()
-        {
-
-        }
-
-        [TearDown]
-        public void AfterEachTest()
-
-        {
-
-        }
+        string mytable = TableName;
+        private string mydb = DbName;
 
 
         [Test]
         public void Test()
         {
-            var linqQueryable = R.Db("mydb").Table<Foo>("mytable", conn);
+            ClearTable(mydb, mytable);
 
-            var linqResult = linqQueryable.Where(f => f.id == "jjj").FirstOrDefault();
+            var people = new[]
+                {
+                    new Person {FirstName = "Brian", LastName = "Chavez"},
+                    new Person {FirstName = "Major", LastName = "Tom"},
+                    new Person {FirstName = "Britney", LastName = "Spears"},
+                    new Person {FirstName = "Flo", LastName = "Rida"}
+                };
 
-            var asreql = R.Db("mydb").Table("mytable").filter(f => f["id"] == "jjj");
+            R.Db(mydb).table(mytable).insert(people)
+                .RunResult(conn)
+                .AssertInserted(4);
+
+
+            var reql = R.Db(mydb).Table(mytable)
+                .filter(f => f["FirstName"] == "Brian")
+                .RunResult<List<Person>>(conn);
+
+            reql.Count.Should().Be(1);
+
+            //var linq = R.Db("mydb").Table<Person>("mytable", conn);
+            var linq = R.Db(mydb).Table(mytable).AsQueryable<Person>(conn);
+
+            var result = linq.Where(f => f.FirstName == "Brian").ToList();
+
+            
 
         }
     }
