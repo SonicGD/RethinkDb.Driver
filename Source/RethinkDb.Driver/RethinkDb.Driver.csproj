@@ -69,6 +69,7 @@
     <Compile Include="Linq\ExpressionVisitor.cs" />
     <Compile Include="Linq\ModelVisitor.cs" />
     <Compile Include="Linq\RethinkQueryable.cs" />
+    <Compile Include="Linq\SelectionProjector.cs" />
     <Compile Include="Generated\Ast\Fold.cs" />
     <Compile Include="Generated\Ast\Grant.cs" />
     <Compile Include="Generated\ReqlPermissionError.cs" />

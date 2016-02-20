@@ -6,6 +6,7 @@ using NUnit.Framework;
 using RethinkDb.Driver.Linq;
 using RethinkDb.Driver.Model;
 using RethinkDb.Driver.Net;
+using RethinkDb.Driver.Tests.Utils;
 
 namespace RethinkDb.Driver.Tests.ReQL
 {
@@ -29,10 +30,10 @@ namespace RethinkDb.Driver.Tests.ReQL
         string mytable = TableName;
         private string mydb = DbName;
 
-
-        [Test]
-        public void Test()
+        public override void BeforeEachTest()
         {
+            base.BeforeEachTest();
+
             ClearTable(mydb, mytable);
 
             var people = new[]
@@ -43,11 +44,16 @@ namespace RethinkDb.Driver.Tests.ReQL
                     new Person {FirstName = "Flo", LastName = "Rida"}
                 };
 
+
             R.Db(mydb).table(mytable).insert(people)
                 .RunResult(conn)
                 .AssertInserted(4);
+        }
 
 
+        [Test]
+        public void Test()
+        {
             var reql = R.Db(mydb).Table(mytable)
                 .filter(f => f["FirstName"] == "Brian")
                 .RunResult<List<Person>>(conn);
@@ -59,8 +65,34 @@ namespace RethinkDb.Driver.Tests.ReQL
 
             var result = linq.Where(f => f.FirstName == "Brian").ToList();
 
-            
+            foreach( var r in result )
+            {
+                r.Dump();
+            }            
+        }
 
+        [Test]
+        public void linq2()
+        {
+            var tableOfPeople = R.Db(mydb).table(mytable);
+
+            var peopleNamedBrian =
+                from person in tableOfPeople.AsQueryable<Person>(conn)
+                where person.FirstName == "Brian"
+                select person;
+
+            foreach ( var brians in peopleNamedBrian )
+            {
+                brians.FirstName.Should().Be("Brian");
+            }
+
+            var findBriansUsingMethods = tableOfPeople.AsQueryable<Person>(conn)
+                .Where(f => f.FirstName == "Brian");
+
+            foreach( var brians in findBriansUsingMethods )
+            {
+                brians.FirstName.Should().Be("Brian");
+            }
         }
     }
 }

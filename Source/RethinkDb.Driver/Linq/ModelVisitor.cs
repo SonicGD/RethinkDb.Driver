@@ -73,6 +73,7 @@ cannot translate, you’ll get invalid query translations.
             this.ById.Add(varId, term);
         }
     }
+
     public class ModelVisitor : QueryModelVisitorBase
     {
         private readonly Table table;
@@ -91,6 +92,7 @@ cannot translate, you’ll get invalid query translations.
 
         public override void VisitQueryModel(QueryModel queryModel)
         {
+            this.stack.Push(this.table);
             base.VisitQueryModel(queryModel);
         }
 
@@ -134,19 +136,27 @@ cannot translate, you’ll get invalid query translations.
         {
 
             //Is it a FILTER, GET or GETALL, OR BETWEEN?
-            var predicateExpr = GetReqlAst(whereClause.Predicate, queryModel, this.fromVars);
+            var predicateExpr = GetWhereReqlAst(whereClause.Predicate, queryModel, this.fromVars);
 
             var varIds = this.fromVars.ById.Keys.ToList();
 
             var func = Func.MakeFunc(varIds, predicateExpr);
-
-            this.stack.Push(func);
+            var current = this.stack.Pop();
+            var newExpr = current.Filter(func);
+            this.stack.Push(newExpr);
         }
 
-        private ReqlExpr GetReqlAst(Expression predicate, QueryModel queryModel, Vars vars)
+        private ReqlExpr GetWhereReqlAst(Expression predicate, QueryModel queryModel, Vars vars)
         {
             var visitor = new ExpressionVisitor(this, queryModel, vars);
             visitor.Visit(predicate);
+            return visitor.Current;
+        }
+
+        private ReqlExpr GetSelectReqlAst(Expression selector)
+        {
+            var visitor = new SelectionProjector();
+            visitor.Visit(selector);
             return visitor.Current;
         }
 
@@ -164,8 +174,16 @@ cannot translate, you’ll get invalid query translations.
         public override void VisitSelectClause(SelectClause selectClause, QueryModel queryModel)
         {
             //var map = GetReqlAst(selectClause.Selector, queryModel, this.fromVars);
-            DefaultIfE
+            //DefaultIfE
 
+            var expr = GetSelectReqlAst(selectClause.Selector);
+            if( !ReferenceEquals(expr, null) )
+            {
+                //tehn attach the expression
+                //to the current in the eval stack,
+                //otherwise, no need to transform the 
+                //shape of the data.
+            }
 
             base.VisitSelectClause(selectClause, queryModel);
         }
