@@ -1,61 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
-using System.Reflection;
-using System.Text;
 using Remotion.Linq.Clauses.Expressions;
 using Remotion.Linq.Parsing;
 using RethinkDb.Driver.Ast;
 
 namespace RethinkDb.Driver.Linq
 {
-
-    //internal class ColumnProjection
-    //{
-    //    internal string Columns;
-    //    internal Expression Selector;
-    //}
-
-    //internal class ColumnProjector : ExpressionVisitor
-    //{
-    //    StringBuilder sb;
-    //    int iColumn;
-    //    ParameterExpression row;
-    //    static MethodInfo getValueMethodInfo;
-
-    //    internal ColumnProjector()
-    //    {
-    //        if (getValueMethodInfo == null)
-    //        {
-    //            getValueMethodInfo = typeof(ProjectionRow).GetMethod("GetValue");
-    //        }
-    //    }
-
-    //    internal ColumnProjection ProjectColumns(Expression expression, ParameterExpression row)
-    //    {
-    //        this.sb = new StringBuilder();
-    //        this.row = row;
-    //        Expression selector = this.Visit(expression);
-    //        return new ColumnProjection { Columns = this.sb.ToString(), Selector = selector };
-    //    }
-
-    //    protected override Expression VisitMemberAccess(MemberExpression m)
-    //    {
-    //        if (m.Expression != null && m.Expression.NodeType == ExpressionType.Parameter)
-    //        {
-    //            if (this.sb.Length > 0)
-    //            {
-    //                this.sb.Append(", ");
-    //            }
-    //            this.sb.Append(m.Member.Name);
-    //            return Expression.Convert(Expression.Call(this.row, getValueMethodInfo, Expression.Constant(iColumn++)), m.Type);
-    //        }
-    //        else {
-    //            return base.VisitMemberAccess(m);
-    //        }
-    //    }
-    //}
-
     /// <summary>
     /// basically, what we need to do in here is figure
     /// if we need to perform any result transformations 
