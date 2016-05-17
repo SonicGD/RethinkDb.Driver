@@ -228,7 +228,7 @@ namespace RethinkDb.Driver.Net.Clustering
                     var test = new TcpClient();
                     try
                     {
-                        test.Connect(ip, port);
+                        test.ConnectAsync(ip, port).RunSynchronously();
                     }
                     catch
                     {

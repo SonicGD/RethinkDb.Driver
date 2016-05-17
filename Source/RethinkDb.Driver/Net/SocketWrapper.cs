@@ -11,7 +11,7 @@ namespace RethinkDb.Driver.Net
 {
     internal class SocketWrapper
     {
-        private readonly TcpClient socketChannel;
+        private readonly Socket socket;
         private readonly TimeSpan timeout;
 
         private readonly string hostname;
@@ -30,7 +30,8 @@ namespace RethinkDb.Driver.Net
 
             this.timeout = timeout ?? TimeSpan.FromSeconds(60);
 
-            this.socketChannel = new TcpClient();
+            //this.socketChannel = new TcpClient();
+            this.socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
         }
 
         private Exception currentException;
@@ -39,16 +40,22 @@ namespace RethinkDb.Driver.Net
         {
             try
             {
-                socketChannel.NoDelay = true;
+                //socketChannel.NoDelay = true;
+                socket.NoDelay = true;
                 //socketChannel.LingerState.Enabled = false;
                 //socketChannel.LingerState.LingerTime = 500;
                 //socketChannel.ReceiveTimeout = 250;
-                socketChannel.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
+                
+                //socketChannel.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
                 //socketChannel.Client.Blocking = true;
-
-                await socketChannel.ConnectAsync(this.hostname, this.port).ConfigureAwait(false);
-
-                this.ns = socketChannel.GetStream();
+                socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
+                //await socketChannel.ConnectAsync(this.hostname, this.port).ConfigureAwait(false);
+#if DNX
+                await socket.ConnectAsync(this.hostname, this.port).ConfigureAwait(false);
+#else
+                socket.Connect(this.hostname, this.port);
+#endif
+                this.ns = new NetworkStream(socket);
                 this.bw = new BinaryWriter(this.ns);
                 this.br = new BinaryReader(this.ns);
 
@@ -288,9 +295,9 @@ namespace RethinkDb.Driver.Net
             return awaiter?.Task ?? TaskHelper.CompletedResponse;
         }
 
-        public virtual bool Closed => !socketChannel.Connected;
+        public virtual bool Closed => !socket.Connected;
 
-        public virtual bool Open => socketChannel.Connected;
+        public virtual bool Open => socket.Connected;
 
         public virtual bool HasError => currentException != null;
 
@@ -308,7 +315,7 @@ namespace RethinkDb.Driver.Net
 
             try
             {
-                socketChannel.Shutdown();
+                socket.Shutdown(SocketShutdown.Both);
             }
             catch
             {
