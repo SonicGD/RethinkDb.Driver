@@ -46,7 +46,7 @@ namespace RethinkDb.Driver.ReGrid
         }
 
 
-#if !DNX
+#if !STANDARD
         public override void Close()
         {
             CloseHelper();

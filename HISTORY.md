@@ -1,3 +1,21 @@
+## v2.3.3
+* Roll-up Release for Full .NET Framework since last non-beta release.
+* CoreCLR users please continue using latest beta release until CoreCLR is RTM.
+
+## v2.3.3-beta-1
+* Issue 62 - Fixed "An address incompatible with the requested protocol was used" on Azure
+
+## v2.3.2
+* Roll-up Release for Full .NET Framework since last non-beta release.
+* CoreCLR users please continue using latest beta release until CoreCLR is RTM.
+
+## v2.3.2-beta-2
+* Connection now exposes ClientLocalEndpoint.
+* Better .NET Standard 1.3 and .NET Core RC2 compatibility.
+
+## v2.3.2-beta-1
+* Compatibility with .NET Standard 1.3 and .NET Core RC2.
+
 ## v2.3.1-beta-3
 * Experimental LINQ to ReQL provider support.
 

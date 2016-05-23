@@ -1,5 +1,5 @@
 using System.Text;
-#if DNX
+#if STANDARD
 using Microsoft.Extensions.Logging;
 #else
 using Common.Logging;
@@ -12,7 +12,7 @@ namespace RethinkDb.Driver
     /// </summary>
     public static class Log
     {
-#if DNX
+#if STANDARD
         /// <summary>
         /// RethinkDB Logger
         /// </summary>
@@ -29,7 +29,7 @@ namespace RethinkDb.Driver
         /// </summary>
         public static void Trace(string msg)
         {
-#if DNX
+#if STANDARD
             Instance?.LogDebug(msg);
 #else
             Instance.Trace(Filter(msg));
@@ -41,14 +41,17 @@ namespace RethinkDb.Driver
         /// </summary>
         public static void Debug(string msg)
         {
-#if DNX
+#if STANDARD
             Instance?.LogDebug(msg);
 #else
             Instance.Debug(Filter(msg));
 #endif
         }
 
-#if DNX
+#if STANDARD
+        /// <summary>
+        /// Enables RehtinkDB Driver Logging
+        /// </summary>
         public static void EnableRethinkDbLogging(this ILoggerFactory loggerFactory)
         {
             Instance = loggerFactory.CreateLogger("RethinkDb.Driver");

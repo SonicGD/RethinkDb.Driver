@@ -5,7 +5,7 @@ namespace RethinkDb.Driver.Net
 {
     internal class SecureRandom : IDisposable
     {
-#if DNX
+#if STANDARD
         private RandomNumberGenerator random = RandomNumberGenerator.Create();
 #else
         private RNGCryptoServiceProvider random = new RNGCryptoServiceProvider();

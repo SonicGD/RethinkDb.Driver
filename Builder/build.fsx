@@ -28,6 +28,7 @@ let workingDir = ChangeWorkingFolder()
 trace (sprintf "WORKING DIR: %s" workingDir)
 
 let ProjectName = "RethinkDb.Driver";
+let GitHubUrl = "https://github.com/bchavez/RethinkDb.Driver"
 
 let Folders = Setup.Folders(workingDir)
 let Files = Setup.Files(Folders)
@@ -102,19 +103,15 @@ Target "dnx" (fun _ ->
 
     let tag = "dnx_build"
     
-    DnvmUpdate()
-    DnvmInstall Projects.DnvmVersion
-    DnvmUse Projects.DnvmVersion
-    
     // PROJECTS
-    Dnu DnuCommands.Restore DriverProject.Folder
-    DnuBuild DriverProject.Folder (DriverProject.OutputDirectory @@ tag)
+    Dotnet DotnetCommands.Restore DriverProject.Folder
+    DotnetBuild DriverProject (DriverProject.OutputDirectory @@ tag)
 
-    Dnu DnuCommands.Restore LinqProject.Folder
-    DnuBuild LinqProject.Folder (LinqProject.OutputDirectory @@ tag)
+    Dotnet DotnetCommands.Restore LinqProject.Folder
+    DotnetBuild LinqProject (LinqProject.OutputDirectory @@ tag)
 
-    Dnu DnuCommands.Restore GridProject.Folder
-    DnuBuild GridProject.Folder (GridProject.OutputDirectory @@ tag)
+    Dotnet DotnetCommands.Restore GridProject.Folder
+    DotnetBuild GridProject (GridProject.OutputDirectory @@ tag)
 )
 
 Target "mono" (fun _ ->
@@ -139,27 +136,15 @@ Target "restore" (fun _ ->
 Target "nuget" (fun _ ->
     trace "NuGet Task"
     
-    let driverConfig = NuGetConfig DriverProject Folders Files     
-    NuGet ( fun p -> driverConfig) DriverProject.NugetSpec
-
-    let linqConfig = NuGetConfig LinqProject Folders Files     
-    NuGet ( fun p -> linqConfig) LinqProject.NugetSpec
-
-    let gridConfig = NuGetConfig GridProject Folders Files     
-    NuGet ( fun p -> gridConfig) GridProject.NugetSpec
+    DotnetPack DriverProject Folders.Package
+    DotnetPack LinqProject Folders.Package
+    DotnetPack GridProject Folders.Package
 )
 
 Target "push" (fun _ ->
     trace "NuGet Push Task"
     
-    let driverConfig = NuGetConfig DriverProject Folders Files     
-    NuGetPublish ( fun p -> driverConfig)
-
-    let linqConfig = NuGetConfig LinqProject Folders Files     
-    NuGetPublish ( fun p -> linqConfig)
-
-    let gridConfig = NuGetConfig GridProject Folders Files     
-    NuGetPublish ( fun p -> gridConfig)
+    failwith "Only CI server should publish on NuGet"
 )
 
 
@@ -167,9 +152,10 @@ Target "push" (fun _ ->
 Target "zip" (fun _ -> 
     trace "Zip Task"
 
-    !!(DriverProject.OutputDirectory @@ "**") |> Zip Folders.CompileOutput (Folders.Package @@ DriverProject.Zip)
-    !!(LinqProject.OutputDirectory @@ "**") |> Zip Folders.CompileOutput (Folders.Package @@ LinqProject.Zip)
-    !!(GridProject.OutputDirectory @@ "**") |> Zip Folders.CompileOutput (Folders.Package @@ GridProject.Zip)
+    !!(DriverProject.OutputDirectory @@ "**") 
+        ++ (LinqProject.OutputDirectory @@ "**")
+        ++ (GridProject.OutputDirectory @@ "**")
+        |> Zip Folders.CompileOutput (Folders.Package @@ DriverProject.Zip)
 )
 
 
@@ -180,12 +166,37 @@ Target "BuildInfo" (fun _ ->
     MakeBuildInfo DriverProject Folders
     MakeBuildInfo LinqProject Folders
     MakeBuildInfo GridProject Folders
+
+    JsonPoke "version" BuildContext.FullVersion DriverProject.ProjectJson
+    JsonPoke "version" BuildContext.FullVersion LinqProject.ProjectJson
+    JsonPoke "version" BuildContext.FullVersion GridProject.ProjectJson
+    
+    let releaseNotes = History.NugetText Files.History GitHubUrl
+    JsonPoke "packOptions.releaseNotes" releaseNotes DriverProject.ProjectJson
+    JsonPoke "packOptions.releaseNotes" releaseNotes LinqProject.ProjectJson
+    JsonPoke "packOptions.releaseNotes" releaseNotes GridProject.ProjectJson
+
+    let version = sprintf "[%s]" BuildContext.FullVersion
+    SetDependency DriverProject.Name version GridProject.ProjectJson
+    SetDependency DriverProject.Name version LinqProject.ProjectJson
 )
 
 
 Target "Clean" (fun _ ->
     DeleteFile Files.TestResultFile
     CleanDirs [Folders.CompileOutput; Folders.Package]
+
+    JsonPoke "version" "0.0.0-localbuild" DriverProject.ProjectJson
+    JsonPoke "version" "0.0.0-localbuild" LinqProject.ProjectJson
+    JsonPoke "version" "0.0.0-localbuild" GridProject.ProjectJson
+    
+    //reset project deps.
+    JsonPoke "packOptions.releaseNotes" "" DriverProject.ProjectJson
+    JsonPoke "packOptions.releaseNotes" "" LinqProject.ProjectJson
+    JsonPoke "packOptions.releaseNotes" "" GridProject.ProjectJson
+
+    SetDependency DriverProject.Name "*" GridProject.ProjectJson
+    SetDependency DriverProject.Name "*" LinqProject.ProjectJson
 )
 
 open Ionic.Zip
